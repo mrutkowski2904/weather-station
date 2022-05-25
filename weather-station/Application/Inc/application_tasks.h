@@ -7,6 +7,7 @@
 
 extern UART_HandleTypeDef huart2;
 extern RTC_HandleTypeDef hrtc;
+extern I2C_HandleTypeDef hi2c1;
 
 extern osMessageQueueId_t sdCardWriteQueueHandle;
 

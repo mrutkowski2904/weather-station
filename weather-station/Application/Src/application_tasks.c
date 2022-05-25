@@ -3,7 +3,23 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "OLED_SSD1306.h"
+#include "GFX_BW.h"
+#include "fonts/fonts.h"
+
 void StartDisplayTask(void *argument) {
+//	int32_t state = osKernelLock();
+
+	SSD1306_I2cInit(&hi2c1);
+	GFX_SetFont(font_8x5);
+	GFX_SetFontSize(1);
+
+	char *msg = "hello";
+	GFX_DrawString(0,10, msg, WHITE, BLACK);
+	SSD1306_Display();
+
+//	osKernelRestoreLock(state);
+
 	for (;;) {
 		osThreadYield();
 	}
