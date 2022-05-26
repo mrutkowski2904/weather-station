@@ -6,19 +6,26 @@
 #include "GFX_BW.h"
 
 #include "sd_card.h"
+#include "util.h"
 
 volatile uint8_t current_menu_state = UI_MAIN;
 
 static SD_Card_Info_t *sd_info = NULL;
 static uint8_t setting_time = 0;
+static uint8_t current_pos_time_set = HOUR_SETTING;
+
+static RTC_TimeTypeDef time_set;
+static RTC_DateTypeDef date_set;
 
 static void DrawUIMain(void);
 static void DrawUITimeSet(void);
 static void DrawUISdInfo(void);
 static void HandleOkBtn(void);
+static void TimeSetBtnRight(void);
+static void TimeSetBtnLeft(void);
 
 /*
- * <--> MENU <--> TIME_SET <--> SD_INFO <-->
+ * <--> MAIN SCREEN <--> TIME_SET <--> SD_INFO <-->
  */
 void NextUIState(void) {
 	switch (current_menu_state) {
@@ -74,7 +81,7 @@ void HandleBtnClick(uint8_t btn_pressed) {
 	switch (btn_pressed) {
 	case BUTTON_RIGHT_PRESSED:
 		if (setting_time) {
-
+			TimeSetBtnRight();
 		} else {
 			NextUIState();
 			sd_info = NULL;
@@ -82,6 +89,7 @@ void HandleBtnClick(uint8_t btn_pressed) {
 		break;
 	case BUTTON_LEFT_PRESSED:
 		if (setting_time) {
+			TimeSetBtnLeft();
 		} else {
 			PrevUIState();
 			sd_info = NULL;
@@ -115,16 +123,29 @@ static void DrawUIMain(void) {
 }
 
 static void DrawUITimeSet(void) {
-	char text_buff[128];
+	char *timeString = NULL;
+	char *dateString = NULL;
+	char text_buff[64];
+	static uint8_t frame_cnt = 0;
+
 	sprintf(text_buff, "Data i Godz");
 	GFX_DrawString(0, 0, text_buff, WHITE, BLACK);
 	GFX_DrawLine(0, 16, 128, 16, WHITE);
-	if (setting_time) {
 
+	if (setting_time) {
+		timeString = GenerateTimeSetString(frame_cnt, current_pos_time_set,
+				&time_set);
+		GFX_DrawString(0, 20, timeString, WHITE, BLACK);
+
+		dateString = GenerateDateSetString(frame_cnt, current_pos_time_set,
+				&date_set);
+		GFX_DrawString(0, 40, dateString, WHITE, BLACK);
 	} else {
+
 		sprintf(text_buff, "Ustawienia");
 		GFX_DrawString(0, 20, text_buff, WHITE, BLACK);
 	}
+	frame_cnt++;
 }
 
 static void DrawUISdInfo(void) {
@@ -141,7 +162,7 @@ static void DrawUISdInfo(void) {
 			sprintf(text_buff, "%ld", sd_info->free);
 			GFX_DrawString(0, 20, text_buff, WHITE, BLACK);
 
-			sprintf(text_buff, "Wolne skt.");
+			sprintf(text_buff, "Wolne sekt.");
 			GFX_DrawString(0, 36, text_buff, WHITE, BLACK);
 		} else {
 			sprintf(text_buff, "Niedostepna");
@@ -150,14 +171,49 @@ static void DrawUISdInfo(void) {
 	}
 }
 
+static void TimeSetBtnRight(void) {
+
+}
+
+static void TimeSetBtnLeft(void) {
+
+}
+
 static void HandleOkBtn(void) {
 	switch (current_menu_state) {
 	case UI_SD_INFO:
 		sd_info = GetSdCardInfo();
 		break;
 	case UI_TIME_SET:
-		// DEBUG
-		setting_time = !setting_time;
+		if (setting_time) {
+			switch (current_pos_time_set) {
+			case HOUR_SETTING:
+				current_pos_time_set = MIN_SETTING;
+				break;
+			case MIN_SETTING:
+				current_pos_time_set = SEC_SETTING;
+				break;
+			case SEC_SETTING:
+				current_pos_time_set = DAY_SETTING;
+				break;
+			case DAY_SETTING:
+				current_pos_time_set = MONTH_SETTING;
+				break;
+			case MONTH_SETTING:
+				current_pos_time_set = YEAR_SETTING;
+				break;
+			case YEAR_SETTING:
+				current_pos_time_set = HOUR_SETTING;
+				setting_time = 0;
+				// TODO: save selected time
+				break;
+			}
+		} else {
+			setting_time = 1;
+
+			HAL_RTC_GetTime(&hrtc, &time_set, RTC_FORMAT_BIN);
+			HAL_RTC_GetDate(&hrtc, &date_set, RTC_FORMAT_BIN);
+		}
 		break;
 	}
 }

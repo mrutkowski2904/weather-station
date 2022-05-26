@@ -42,6 +42,15 @@ typedef struct SD_Card_Info {
 	uint32_t free;
 } SD_Card_Info_t;
 
+enum TimeSetPosition{
+	HOUR_SETTING = 0,
+	MIN_SETTING,
+	SEC_SETTING,
+	DAY_SETTING,
+	MONTH_SETTING,
+	YEAR_SETTING
+};
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
