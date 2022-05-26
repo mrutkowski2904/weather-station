@@ -8,20 +8,20 @@
 #include "fonts/fonts.h"
 
 void StartDisplayTask(void *argument) {
-//	int32_t state = osKernelLock();
+	uint32_t os_tick;
 
 	SSD1306_I2cInit(&hi2c1);
 	GFX_SetFont(font_8x5);
-	GFX_SetFontSize(1);
-
-	char *msg = "hello";
-	GFX_DrawString(0,10, msg, WHITE, BLACK);
-	SSD1306_Display();
-
-//	osKernelRestoreLock(state);
+	GFX_SetFontSize(2);
 
 	for (;;) {
-		osThreadYield();
+		if (hi2c1.hdmatx->State == HAL_DMA_STATE_READY) {
+			DrawCurrentUIState();
+		}
+
+		// 20 FPS
+		os_tick = osKernelGetTickCount();
+		osDelayUntil(os_tick + 50U);
 	}
 }
 

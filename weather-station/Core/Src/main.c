@@ -24,7 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "application_tasks.h"
-
+#include "ui.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +57,7 @@ osThreadId_t displayTaskHandle;
 const osThreadAttr_t displayTask_attributes = {
   .name = "displayTask",
   .stack_size = 768 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for sdcardTask */
 osThreadId_t sdcardTaskHandle;
@@ -499,13 +499,14 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 	}
 }
 
-#include <string.h>
-char *msg_to_write = "klik\r\n";
+//#include <string.h>
+//char *msg_to_write = "klik\r\n";
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == B1_Pin) {
-		osMessageQueuePut(sdCardWriteQueueHandle, &msg_to_write, 0U, 0U);
-		HAL_UART_Transmit_DMA(&huart2, (uint8_t*) msg_to_write,
-				strlen(msg_to_write));
+		NextUIState();
+//		osMessageQueuePut(sdCardWriteQueueHandle, &msg_to_write, 0U, 0U);
+//		HAL_UART_Transmit_DMA(&huart2, (uint8_t*) msg_to_write,
+//				strlen(msg_to_write));
 	}
 }
 
