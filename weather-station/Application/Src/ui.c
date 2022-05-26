@@ -172,11 +172,27 @@ static void DrawUISdInfo(void) {
 }
 
 static void TimeSetBtnRight(void) {
-
+	if (current_pos_time_set == HOUR_SETTING
+			|| current_pos_time_set == MIN_SETTING
+			|| current_pos_time_set == SEC_SETTING) {
+		IncrementTimeSet(current_pos_time_set, &time_set);
+	} else if (current_pos_time_set == DAY_SETTING
+			|| current_pos_time_set == MONTH_SETTING
+			|| current_pos_time_set == YEAR_SETTING) {
+		IncrementDateSet(current_pos_time_set, &date_set);
+	}
 }
 
 static void TimeSetBtnLeft(void) {
-
+	if (current_pos_time_set == HOUR_SETTING
+			|| current_pos_time_set == MIN_SETTING
+			|| current_pos_time_set == SEC_SETTING) {
+		DecrementTimeSet(current_pos_time_set, &time_set);
+	} else if (current_pos_time_set == DAY_SETTING
+			|| current_pos_time_set == MONTH_SETTING
+			|| current_pos_time_set == YEAR_SETTING) {
+		DecrementDateSet(current_pos_time_set, &date_set);
+	}
 }
 
 static void HandleOkBtn(void) {
@@ -205,7 +221,8 @@ static void HandleOkBtn(void) {
 			case YEAR_SETTING:
 				current_pos_time_set = HOUR_SETTING;
 				setting_time = 0;
-				// TODO: save selected time
+				HAL_RTC_SetTime(&hrtc, &time_set, RTC_FORMAT_BIN);
+				HAL_RTC_SetDate(&hrtc, &date_set, RTC_FORMAT_BIN);
 				break;
 			}
 		} else {
