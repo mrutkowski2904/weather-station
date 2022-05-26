@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.h
+ * @brief          : Header for main.c file.
+ *                   This file contains the common defines of the application.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2022 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -36,6 +36,11 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+
+typedef struct SD_Card_Info {
+	uint8_t available;
+	uint32_t free;
+} SD_Card_Info_t;
 
 /* USER CODE END ET */
 
@@ -74,8 +79,20 @@ void Error_Handler(void);
 #define TCK_GPIO_Port GPIOA
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+#define BTN_RIGHT_Pin GPIO_PIN_8
+#define BTN_RIGHT_GPIO_Port GPIOB
+#define BTN_RIGHT_EXTI_IRQn EXTI9_5_IRQn
+#define BTN_LEFT_Pin GPIO_PIN_9
+#define BTN_LEFT_GPIO_Port GPIOB
+#define BTN_LEFT_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
-#define SD_SPI_HANDLE hspi2
+#define SD_SPI_HANDLE 			hspi2
+#define DEBOUNCE_MS 			150
+
+#define BUTTON_LEFT_PRESSED		0x01
+#define BUTTON_RIGHT_PRESSED	0x02
+#define BUTTON_OK_PRESSED		0x04
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

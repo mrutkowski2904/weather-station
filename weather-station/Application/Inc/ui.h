@@ -12,5 +12,6 @@ enum UIStates {
 void NextUIState(void);
 void PrevUIState(void);
 void DrawCurrentUIState(void);
+void HandleBtnClick(uint8_t btn_pressed);
 
 #endif /* INC_UI_H_ */
