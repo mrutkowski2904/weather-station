@@ -5,9 +5,10 @@ uint8_t DHT11_Start_Init(DHT11_TypeDef *dht) {
 	dht_pin.Pin = dht->Pin;
 	dht_pin.Pull = GPIO_NOPULL;
 
+	dht->index = 0;
 	dht->recieved_bits = 0;
-	dht->currently_recieving = dht->RH_Integral;
 	dht->state = DHT11_STATE_INIT;
+
 	dht_pin.Mode = GPIO_MODE_OUTPUT_OD;
 	HAL_GPIO_Init(dht->Port, &dht_pin);
 
@@ -18,11 +19,6 @@ uint8_t DHT11_Start_Init(DHT11_TypeDef *dht) {
 
 void DHT11_Start_End(DHT11_TypeDef *dht) {
 	if (dht->state == DHT11_STATE_INIT) {
-		*dht->T_Decimal = 0;
-		*dht->T_Integral = 0;
-		*dht->RH_Decimal = 0;
-		*dht->RH_Integral = 0;
-
 		// finish init sequence
 		HAL_GPIO_WritePin(dht->Port, dht->Pin, GPIO_PIN_SET);
 
@@ -30,12 +26,14 @@ void DHT11_Start_End(DHT11_TypeDef *dht) {
 		GPIO_InitTypeDef dht_pin = { 0 };
 		dht_pin.Pin = dht->Pin;
 		dht_pin.Pull = GPIO_NOPULL;
-		dht_pin.Mode = GPIO_MODE_IT_RISING;
+		dht_pin.Mode = GPIO_MODE_IT_RISING_FALLING;
 		HAL_GPIO_Init(dht->Port, &dht_pin);
 
 		dht->state = DHT11_STATE_ACK;
+		dht->recieved_bits = 0;
 
 		HAL_TIM_Base_Start(dht->usTimerHandle);
+		__HAL_TIM_SET_COUNTER(dht->usTimerHandle, 0U);
 	}
 }
 
@@ -46,44 +44,36 @@ __weak void DHT11_RecieveCpltCallback(DHT11_TypeDef *dht) {
 }
 
 void DHT11_IRQHandler(DHT11_TypeDef *dht) {
-	dht->recieved_bits++;
+	dht->last_recieved_at = __HAL_TIM_GET_COUNTER(dht->usTimerHandle);
+	__HAL_TIM_SET_COUNTER(dht->usTimerHandle, 0U);
 
-	// end of ACK sequence
-	if (dht->recieved_bits == 2 && dht->state == DHT11_STATE_ACK) {
-		__HAL_TIM_SET_COUNTER(dht->usTimerHandle, 0U);
-		dht->state = DHT11_STATE_BUSY;
-		dht->recieved_bits = 0;
-		return;
-	}
+	if (HAL_GPIO_ReadPin(dht->Port, dht->Pin) == 0) {
+		// falling edge
+		dht->recieved_bits++;
 
-	if (dht->state == DHT11_STATE_BUSY) {
-		uint32_t current_at = __HAL_TIM_GET_COUNTER(dht->usTimerHandle);
+		if (dht->recieved_bits == 2 && dht->state == DHT11_STATE_ACK) {
+			dht->recieved_bits = 0;
+			dht->state = DHT11_STATE_BUSY;
+			return;
+		}
 
-		// next part of data frame
-		if (dht->recieved_bits == 9) {
-			if (dht->currently_recieving == dht->RH_Integral) {
-				dht->currently_recieving = dht->RH_Decimal;
-			} else if (dht->currently_recieving == dht->RH_Decimal) {
-				dht->currently_recieving = dht->T_Integral;
-			} else if (dht->currently_recieving == dht->T_Integral) {
-				dht->currently_recieving = dht->T_Decimal;
-			} else if (dht->currently_recieving == dht->T_Decimal) {
-				dht->currently_recieving = NULL;
+		if (dht->state == DHT11_STATE_BUSY) {
+			if (dht->recieved_bits == 8) {
+				dht->index++;
+				dht->recieved_bits = 0;
+			}
+
+			if (dht->last_recieved_at > 50 && dht->index <= 4) {
+				// recieved 1
+				*(dht->data + dht->index) |= (1 << (7 - dht->recieved_bits));
+			}
+
+			if (dht->index == 4 && dht->recieved_bits == 7) {
 				HAL_TIM_Base_Stop(dht->usTimerHandle);
 				dht->state = DHT11_STATE_FINISHED;
 				DHT11_RecieveCpltCallback(dht);
 			}
 
-			dht->recieved_bits = 0;
 		}
-
-		if (dht->currently_recieving != NULL) {
-			if ((current_at - dht->last_recieved_at) > 100) {
-				// recieved 1
-				*dht->currently_recieving |= (1 << (8 - dht->recieved_bits));
-			}
-			// 0 is already written
-		}
-		dht->last_recieved_at = current_at;
 	}
 }

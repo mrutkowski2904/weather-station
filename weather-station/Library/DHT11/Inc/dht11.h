@@ -23,19 +23,14 @@ typedef struct {
 	GPIO_TypeDef *Port;
 	TIM_HandleTypeDef *usTimerHandle;
 
-	// Humidity
-	uint8_t *RH_Integral;
-	uint8_t *RH_Decimal;
-
-	// Temperature
-	uint8_t *T_Integral;
-	uint8_t *T_Decimal;
+	// 5 byte array
+	uint8_t *data;
 
 	/* ---------- INTERNAL DO NOT MODIFY ---------- */
 	uint8_t state;
 	uint8_t recieved_bits;
 	uint32_t last_recieved_at;
-
+	uint8_t index;
 	uint8_t *currently_recieving;
 
 } DHT11_TypeDef;
