@@ -49,3 +49,27 @@ void StartButtonTask(void *argument) {
 		HandleBtnClick(btn_pressed);
 	}
 }
+
+void StartDHT11Task(void *argument) {
+	uint8_t tint, tdec, rhint, rhdec;
+	hdht.Pin = DHT11_Pin;
+	hdht.Port = DHT11_GPIO_Port;
+	hdht.usTimerHandle = &htim7;
+	hdht.T_Integral = &tint;
+	hdht.T_Decimal = &tdec;
+	hdht.RH_Decimal = &rhdec;
+	hdht.RH_Integral = &rhint;
+
+	// DHT11 needs time before it can be used for the first time after power up
+	osDelay(1000);
+
+	DHT11_Start_Init(&hdht);
+	osDelay(20);
+	int32_t state = osKernelLock();
+	DHT11_Start_End(&hdht);
+	osKernelRestoreLock(state);
+
+	for (;;) {
+		osDelay(1);
+	}
+}

@@ -10,6 +10,8 @@
 extern UART_HandleTypeDef huart2;
 extern RTC_HandleTypeDef hrtc;
 extern I2C_HandleTypeDef hi2c1;
+extern TIM_HandleTypeDef htim7;
+extern DHT11_TypeDef hdht;
 
 extern volatile uint8_t current_menu_state;
 
