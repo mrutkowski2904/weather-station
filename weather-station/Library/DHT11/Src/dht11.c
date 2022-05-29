@@ -1,5 +1,7 @@
 #include "dht11.h"
 
+#include <string.h>
+
 uint8_t DHT11_Start_Init(DHT11_TypeDef *dht) {
 	GPIO_InitTypeDef dht_pin = { 0 };
 	dht_pin.Pin = dht->Pin;
@@ -8,6 +10,8 @@ uint8_t DHT11_Start_Init(DHT11_TypeDef *dht) {
 	dht->index = 0;
 	dht->recieved_bits = 0;
 	dht->state = DHT11_STATE_INIT;
+
+	memset(dht->data, 0, 5);
 
 	dht_pin.Mode = GPIO_MODE_OUTPUT_OD;
 	HAL_GPIO_Init(dht->Port, &dht_pin);

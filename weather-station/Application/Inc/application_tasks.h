@@ -17,5 +17,9 @@ extern volatile uint8_t current_menu_state;
 
 extern osMessageQueueId_t sdCardWriteQueueHandle;
 extern osMessageQueueId_t buttonClickQueueHandle;
+extern osMessageQueueId_t temperatureQueueHandle;
+extern osMessageQueueId_t humidityQueueHandle;
+extern osMessageQueueId_t displayQueueHandle;
+extern osSemaphoreId_t dht11StartSemHandle;
 
 #endif /* INC_APPLICATION_TASKS_H_ */

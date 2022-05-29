@@ -82,6 +82,13 @@ const osThreadAttr_t dht11Task_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for dataTask */
+osThreadId_t dataTaskHandle;
+const osThreadAttr_t dataTask_attributes = {
+  .name = "dataTask",
+  .stack_size = 300 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 /* Definitions for sdCardWriteQueue */
 osMessageQueueId_t sdCardWriteQueueHandle;
 const osMessageQueueAttr_t sdCardWriteQueue_attributes = {
@@ -91,6 +98,21 @@ const osMessageQueueAttr_t sdCardWriteQueue_attributes = {
 osMessageQueueId_t buttonClickQueueHandle;
 const osMessageQueueAttr_t buttonClickQueue_attributes = {
   .name = "buttonClickQueue"
+};
+/* Definitions for temperatureQueue */
+osMessageQueueId_t temperatureQueueHandle;
+const osMessageQueueAttr_t temperatureQueue_attributes = {
+  .name = "temperatureQueue"
+};
+/* Definitions for humidityQueue */
+osMessageQueueId_t humidityQueueHandle;
+const osMessageQueueAttr_t humidityQueue_attributes = {
+  .name = "humidityQueue"
+};
+/* Definitions for displayQueue */
+osMessageQueueId_t displayQueueHandle;
+const osMessageQueueAttr_t displayQueue_attributes = {
+  .name = "displayQueue"
 };
 /* Definitions for sensorTimer */
 osTimerId_t sensorTimerHandle;
@@ -121,6 +143,7 @@ void StartDisplayTask(void *argument);
 void StartSDCardTask(void *argument);
 void StartButtonTask(void *argument);
 void StartDHT11Task(void *argument);
+void StartDataTask(void *argument);
 void SensorTimerCallback(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -202,6 +225,15 @@ int main(void)
   /* creation of buttonClickQueue */
   buttonClickQueueHandle = osMessageQueueNew (16, sizeof(uint8_t), &buttonClickQueue_attributes);
 
+  /* creation of temperatureQueue */
+  temperatureQueueHandle = osMessageQueueNew (16, sizeof(uint8_t), &temperatureQueue_attributes);
+
+  /* creation of humidityQueue */
+  humidityQueueHandle = osMessageQueueNew (16, sizeof(uint8_t), &humidityQueue_attributes);
+
+  /* creation of displayQueue */
+  displayQueueHandle = osMessageQueueNew (8, sizeof(uint32_t), &displayQueue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -218,6 +250,9 @@ int main(void)
 
   /* creation of dht11Task */
   dht11TaskHandle = osThreadNew(StartDHT11Task, NULL, &dht11Task_attributes);
+
+  /* creation of dataTask */
+  dataTaskHandle = osThreadNew(StartDataTask, NULL, &dataTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
@@ -614,7 +649,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 	}
 }
 
-void process_clicks_debounced(uint16_t pin) {
+void ProcessClicksDebounced(uint16_t pin) {
 	uint8_t btn_pressed = 0;
 
 	if (pin == B1_Pin) {
@@ -638,21 +673,32 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	uint32_t curr_click = HAL_GetTick();
 
 	if (GPIO_Pin == DHT11_Pin) {
-		HAL_GPIO_WritePin(DEBUG_GPIO_Port, DEBUG_Pin, GPIO_PIN_SET);
 		DHT11_IRQHandler(&hdht);
-		HAL_GPIO_WritePin(DEBUG_GPIO_Port, DEBUG_Pin, GPIO_PIN_RESET);
 	}
 
 	// no overflow
 	if (last_click < curr_click && curr_click - last_click > DEBOUNCE_MS) {
-		process_clicks_debounced(GPIO_Pin);
+		ProcessClicksDebounced(GPIO_Pin);
 	}
 	// overflow
 	else if (last_click > curr_click && last_click - curr_click > DEBOUNCE_MS) {
-		process_clicks_debounced(GPIO_Pin);
+		ProcessClicksDebounced(GPIO_Pin);
 	}
 
 	last_click = HAL_GetTick();
+}
+
+void DHT11_RecieveCpltCallback(DHT11_TypeDef *dht) {
+	uint8_t checksum = dht->data[4];
+	uint8_t t_decimal = dht->data[3];
+	uint8_t t_integral = dht->data[2];
+	uint8_t rh_integral = dht->data[0];
+	// rh decimal always 0 on dht11
+
+	if (checksum == (t_decimal + t_integral + rh_integral)) {
+		osMessageQueuePut(temperatureQueueHandle, &t_integral, 0, 0);
+		osMessageQueuePut(humidityQueueHandle, &rh_integral, 0, 0);
+	}
 }
 
 /* USER CODE END 4 */
@@ -723,6 +769,23 @@ __weak void StartDHT11Task(void *argument)
 		osDelay(1);
 	}
   /* USER CODE END StartDHT11Task */
+}
+
+/* USER CODE BEGIN Header_StartDataTask */
+/**
+ * @brief Function implementing the dataTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_StartDataTask */
+__weak void StartDataTask(void *argument)
+{
+  /* USER CODE BEGIN StartDataTask */
+	/* Infinite loop */
+	for (;;) {
+		osDelay(1);
+	}
+  /* USER CODE END StartDataTask */
 }
 
 /* SensorTimerCallback function */

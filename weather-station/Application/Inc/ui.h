@@ -11,7 +11,8 @@ enum UIStates {
 
 void NextUIState(void);
 void PrevUIState(void);
-void DrawCurrentUIState(void);
+void DrawCurrentUIState(uint8_t temperature, uint8_t humidity,
+		uint16_t pressure);
 void HandleBtnClick(uint8_t btn_pressed);
 
 #endif /* INC_UI_H_ */
