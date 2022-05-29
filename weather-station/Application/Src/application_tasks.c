@@ -41,16 +41,16 @@ void StartDisplayTask(void *argument) {
 }
 
 void StartSDCardTask(void *argument) {
-	char *pData;
+	uint32_t data;
 
 	// SD Card can be used after some time from power up
 	osDelay(500);
 	SdPoweredUp();
 
 	for (;;) {
-		osMessageQueueGet(sdCardWriteQueueHandle, &pData, NULL,
+		osMessageQueueGet(sdCardWriteQueueHandle, &data, NULL,
 		osWaitForever);
-		SaveToSdCard(pData);
+		SaveToSdCard(data);
 	}
 }
 
@@ -65,12 +65,12 @@ void StartButtonTask(void *argument) {
 
 void StartDataTask(void *argument) {
 	uint8_t new_data = 0;
-
 	uint8_t temperature_buff = 0;
 	uint8_t humidity_buff = 0;
 
 	uint8_t valid_temperature = 0;
 	uint8_t valid_humidity = 0;
+	uint16_t valid_pressure = 0;
 
 	// temperature, humidity, pressure
 	uint32_t data_package = 0;
@@ -90,11 +90,14 @@ void StartDataTask(void *argument) {
 		if (new_data) {
 			new_data = 0;
 			data_package = (valid_temperature << 24) | (valid_humidity << 16)
-					| (0x0000);
+					| (valid_pressure);
 			osMessageQueuePut(displayQueueHandle, &data_package, 0, 0);
 		}
 
 		// Save to SD card - RTC interrupt happend
+		if (osSemaphoreAcquire(dataSavePendingSemHandle, 0) == osOK) {
+			osMessageQueuePut(sdCardWriteQueueHandle, &data_package, 0, 0);
+		}
 
 		osDelay(100);
 	}

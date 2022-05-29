@@ -6,7 +6,7 @@
 #include "main.h"
 
 void SdPoweredUp(void);
-void SaveToSdCard(char *data);
+void SaveToSdCard(uint32_t data);
 SD_Card_Info_t* GetSdCardInfo(void);
 
 extern RTC_HandleTypeDef hrtc;

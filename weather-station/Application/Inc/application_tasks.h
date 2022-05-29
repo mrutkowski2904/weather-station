@@ -21,5 +21,6 @@ extern osMessageQueueId_t temperatureQueueHandle;
 extern osMessageQueueId_t humidityQueueHandle;
 extern osMessageQueueId_t displayQueueHandle;
 extern osSemaphoreId_t dht11StartSemHandle;
+extern osSemaphoreId_t dataSavePendingSemHandle;
 
 #endif /* INC_APPLICATION_TASKS_H_ */

@@ -86,7 +86,7 @@ const osThreadAttr_t dht11Task_attributes = {
 osThreadId_t dataTaskHandle;
 const osThreadAttr_t dataTask_attributes = {
   .name = "dataTask",
-  .stack_size = 300 * 4,
+  .stack_size = 200 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for sdCardWriteQueue */
@@ -123,6 +123,11 @@ const osTimerAttr_t sensorTimer_attributes = {
 osSemaphoreId_t dht11StartSemHandle;
 const osSemaphoreAttr_t dht11StartSem_attributes = {
   .name = "dht11StartSem"
+};
+/* Definitions for dataSavePendingSem */
+osSemaphoreId_t dataSavePendingSemHandle;
+const osSemaphoreAttr_t dataSavePendingSem_attributes = {
+  .name = "dataSavePendingSem"
 };
 /* USER CODE BEGIN PV */
 
@@ -205,6 +210,9 @@ int main(void)
   /* creation of dht11StartSem */
   dht11StartSemHandle = osSemaphoreNew(1, 1, &dht11StartSem_attributes);
 
+  /* creation of dataSavePendingSem */
+  dataSavePendingSemHandle = osSemaphoreNew(1, 1, &dataSavePendingSem_attributes);
+
   /* USER CODE BEGIN RTOS_SEMAPHORES */
 	/* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -220,7 +228,7 @@ int main(void)
 
   /* Create the queue(s) */
   /* creation of sdCardWriteQueue */
-  sdCardWriteQueueHandle = osMessageQueueNew (16, sizeof(char*), &sdCardWriteQueue_attributes);
+  sdCardWriteQueueHandle = osMessageQueueNew (8, sizeof(uint32_t), &sdCardWriteQueue_attributes);
 
   /* creation of buttonClickQueue */
   buttonClickQueueHandle = osMessageQueueNew (16, sizeof(uint8_t), &buttonClickQueue_attributes);
@@ -392,6 +400,7 @@ static void MX_RTC_Init(void)
 
   RTC_TimeTypeDef sTime = {0};
   RTC_DateTypeDef sDate = {0};
+  RTC_AlarmTypeDef sAlarm = {0};
 
   /* USER CODE BEGIN RTC_Init 1 */
 
@@ -412,13 +421,13 @@ static void MX_RTC_Init(void)
   }
 
   /* USER CODE BEGIN Check_RTC_BKUP */
-	return;
+
   /* USER CODE END Check_RTC_BKUP */
 
   /** Initialize RTC and set the Time and Date
   */
   sTime.Hours = 0;
-  sTime.Minutes = 0;
+  sTime.Minutes = 29;
   sTime.Seconds = 0;
   sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
   sTime.StoreOperation = RTC_STOREOPERATION_RESET;
@@ -427,11 +436,29 @@ static void MX_RTC_Init(void)
     Error_Handler();
   }
   sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_JANUARY;
-  sDate.Date = 1;
-  sDate.Year = 0;
+  sDate.Month = RTC_MONTH_MAY;
+  sDate.Date = 29;
+  sDate.Year = 22;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Enable the Alarm A
+  */
+  sAlarm.AlarmTime.Hours = 0;
+  sAlarm.AlarmTime.Minutes = 30;
+  sAlarm.AlarmTime.Seconds = 0;
+  sAlarm.AlarmTime.SubSeconds = 0;
+  sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  sAlarm.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY|RTC_ALARMMASK_HOURS;
+  sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
+  sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
+  sAlarm.AlarmDateWeekDay = 1;
+  sAlarm.Alarm = RTC_ALARM_A;
+  if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN) != HAL_OK)
   {
     Error_Handler();
   }
@@ -655,10 +682,6 @@ void ProcessClicksDebounced(uint16_t pin) {
 	if (pin == B1_Pin) {
 		btn_pressed = BUTTON_OK_PRESSED;
 		osMessageQueuePut(buttonClickQueueHandle, &btn_pressed, 0U, 0U);
-
-		//		osMessageQueuePut(sdCardWriteQueueHandle, &msg_to_write, 0U, 0U);
-		//		HAL_UART_Transmit_DMA(&huart2, (uint8_t*) msg_to_write,
-		//				strlen(msg_to_write));
 	} else if (pin == BTN_LEFT_Pin) {
 		btn_pressed = BUTTON_LEFT_PRESSED;
 		osMessageQueuePut(buttonClickQueueHandle, &btn_pressed, 0U, 0U);
@@ -699,6 +722,10 @@ void DHT11_RecieveCpltCallback(DHT11_TypeDef *dht) {
 		osMessageQueuePut(temperatureQueueHandle, &t_integral, 0, 0);
 		osMessageQueuePut(humidityQueueHandle, &rh_integral, 0, 0);
 	}
+}
+
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
+	osSemaphoreRelease(dataSavePendingSemHandle);
 }
 
 /* USER CODE END 4 */
