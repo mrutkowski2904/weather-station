@@ -10,8 +10,10 @@
 extern UART_HandleTypeDef huart2;
 extern RTC_HandleTypeDef hrtc;
 extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c2;
 extern TIM_HandleTypeDef htim7;
 extern DHT11_TypeDef hdht;
+extern LPS25HB_TypeDef hlps25hb;
 
 extern volatile uint8_t current_menu_state;
 
@@ -19,8 +21,11 @@ extern osMessageQueueId_t sdCardWriteQueueHandle;
 extern osMessageQueueId_t buttonClickQueueHandle;
 extern osMessageQueueId_t temperatureQueueHandle;
 extern osMessageQueueId_t humidityQueueHandle;
+extern osMessageQueueId_t pressureQueueHandle;
 extern osMessageQueueId_t displayQueueHandle;
+
 extern osSemaphoreId_t dht11StartSemHandle;
 extern osSemaphoreId_t dataSavePendingSemHandle;
+extern osSemaphoreId_t lps25hbStartSemHandle;
 
 #endif /* INC_APPLICATION_TASKS_H_ */

@@ -32,6 +32,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "dht11.h"
+#include "lps25hb.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -42,7 +43,7 @@ typedef struct SD_Card_Info {
 	uint32_t free;
 } SD_Card_Info_t;
 
-enum TimeSetPosition{
+enum TimeSetPosition {
 	HOUR_SETTING = 0,
 	MIN_SETTING,
 	SEC_SETTING,
@@ -50,6 +51,12 @@ enum TimeSetPosition{
 	MONTH_SETTING,
 	YEAR_SETTING
 };
+
+typedef struct {
+	uint8_t temperature;
+	uint8_t humidity;
+	uint32_t pressure;
+} DataPackage_t;
 
 /* USER CODE END ET */
 
@@ -107,6 +114,7 @@ void Error_Handler(void);
 #define BUTTON_RIGHT_PRESSED	0x02
 #define BUTTON_OK_PRESSED		0x04
 
+#define LPS25HB_I2C_ADDR		0xBA
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -56,6 +56,7 @@
 									<listOptionValue builtIn="false" value="../Library/OLED/Inc"/>
 									<listOptionValue builtIn="false" value="../Library/DHT11/Inc"/>
 									<listOptionValue builtIn="false" value="../Application/Inc"/>
+									<listOptionValue builtIn="false" value="../Library/LPS25HB/Inc"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.934146568" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -145,6 +146,7 @@
 									<listOptionValue builtIn="false" value="../Library/OLED/Inc"/>
 									<listOptionValue builtIn="false" value="../Library/DHT11/Inc"/>
 									<listOptionValue builtIn="false" value="../Application/Inc"/>
+									<listOptionValue builtIn="false" value="../Library/LPS25HB/Inc"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1385889171" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>

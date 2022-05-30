@@ -9,16 +9,12 @@
 static uint8_t sd_available = 0;
 static SD_Card_Info_t sd_info = { 0 };
 
-void SaveToSdCard(uint32_t data) {
+void SaveToSdCard(DataPackage_t data) {
 	uint8_t data_len;
 	char filename[64] = { 0 };
 	char sd_buff[64] = { 0 };
 	RTC_TimeTypeDef time;
 	RTC_DateTypeDef date;
-
-	uint8_t temperature = 0;
-	uint8_t humidity = 0;
-	uint16_t pressure = 0;
 
 	if (sd_available) {
 		FATFS FatFs;
@@ -29,12 +25,9 @@ void SaveToSdCard(uint32_t data) {
 		HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
 		HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
 
-		pressure = (uint16_t) (data & 0x0000ffff);
-		humidity = (uint8_t) ((data >> 16) & 0x000000ff);
-		temperature = (uint8_t) ((data >> 24) & 0x000000ff);
-
-		sprintf(sd_buff, "%02d:%02d:%02d;%02d;%02d;%04d\n", time.Hours,
-				time.Minutes, time.Seconds, temperature, humidity, pressure);
+		sprintf(sd_buff, "%02d:%02d:%02d;%02d;%02d;%04ld\n", time.Hours,
+				time.Minutes, time.Seconds, data.temperature, data.humidity,
+				data.pressure);
 		data_len = strlen(sd_buff);
 
 		HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_RESET);

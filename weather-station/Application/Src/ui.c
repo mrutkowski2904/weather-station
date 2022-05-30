@@ -17,7 +17,7 @@ static uint8_t current_pos_time_set = HOUR_SETTING;
 static RTC_TimeTypeDef time_set;
 static RTC_DateTypeDef date_set;
 
-static void DrawUIMain(uint8_t temperature, uint8_t humidity, uint8_t pressure);
+static void DrawUIMain(uint8_t temperature, uint8_t humidity, uint32_t pressure);
 static void DrawUITimeSet(void);
 static void DrawUISdInfo(void);
 static void HandleOkBtn(void);
@@ -61,7 +61,8 @@ void PrevUIState(void) {
 	}
 }
 
-void DrawCurrentUIState(uint8_t temperature, uint8_t humidity, uint16_t pressure) {
+void DrawCurrentUIState(uint8_t temperature, uint8_t humidity,
+		uint32_t pressure) {
 	SSD1306_Clear(BLACK);
 	switch (current_menu_state) {
 	case UI_MAIN:
@@ -101,7 +102,7 @@ void HandleBtnClick(uint8_t btn_pressed) {
 	}
 }
 
-static void DrawUIMain(uint8_t temperature, uint8_t humidity, uint8_t pressure) {
+static void DrawUIMain(uint8_t temperature, uint8_t humidity, uint32_t pressure) {
 	char text_buff[128];
 	RTC_TimeTypeDef time;
 	RTC_DateTypeDef date;
@@ -121,8 +122,8 @@ static void DrawUIMain(uint8_t temperature, uint8_t humidity, uint8_t pressure) 
 	GFX_DrawString(0, 20, text_buff, WHITE, BLACK);
 	GFX_DrawLine(0, 36, 128, 36, WHITE);
 
-	humidity ?
-			sprintf(text_buff, "  %d hPa", pressure) :
+	pressure ?
+			sprintf(text_buff, "  %ld hPa", pressure) :
 			sprintf(text_buff, "  ---- hPa");
 	GFX_DrawString(0, 40, text_buff, WHITE, BLACK);
 }

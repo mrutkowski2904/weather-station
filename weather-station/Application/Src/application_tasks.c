@@ -14,9 +14,9 @@ void StartDisplayTask(void *argument) {
 
 	uint8_t temperature = 0;
 	uint8_t humidity = 0;
-	uint16_t pressure = 0;
+	uint32_t pressure = 0;
 
-	uint32_t data_package = 0;
+	DataPackage_t data_package;
 
 	SSD1306_I2cInit(&hi2c1);
 	GFX_SetFont(font_8x5);
@@ -25,9 +25,9 @@ void StartDisplayTask(void *argument) {
 	for (;;) {
 		if (osMessageQueueGet(displayQueueHandle, &data_package, 0, 0)
 				== osOK) {
-			pressure = (uint16_t) (data_package & 0x0000ffff);
-			humidity = (uint8_t) ((data_package >> 16) & 0x000000ff);
-			temperature = (uint8_t) ((data_package >> 24) & 0x000000ff);
+			pressure = data_package.pressure;
+			humidity = data_package.humidity;
+			temperature = data_package.temperature;
 		}
 
 		if (hi2c1.hdmatx->State == HAL_DMA_STATE_READY) {
@@ -41,7 +41,7 @@ void StartDisplayTask(void *argument) {
 }
 
 void StartSDCardTask(void *argument) {
-	uint32_t data;
+	DataPackage_t data;
 
 	// SD Card can be used after some time from power up
 	osDelay(500);
@@ -67,13 +67,14 @@ void StartDataTask(void *argument) {
 	uint8_t new_data = 0;
 	uint8_t temperature_buff = 0;
 	uint8_t humidity_buff = 0;
+	uint32_t pressure_buff = 0;
 
 	uint8_t valid_temperature = 0;
 	uint8_t valid_humidity = 0;
-	uint16_t valid_pressure = 0;
+	uint32_t valid_pressure = 0;
 
 	// temperature, humidity, pressure
-	uint32_t data_package = 0;
+	DataPackage_t data_package;
 
 	for (;;) {
 		if (osMessageQueueGet(temperatureQueueHandle, &temperature_buff, NULL,
@@ -86,11 +87,19 @@ void StartDataTask(void *argument) {
 			valid_humidity = humidity_buff;
 			new_data = 1;
 		}
+		if (osMessageQueueGet(pressureQueueHandle, &pressure_buff, NULL, 0)
+				== osOK) {
+			valid_pressure = pressure_buff;
+			new_data = 1;
+		}
 
 		if (new_data) {
 			new_data = 0;
-			data_package = (valid_temperature << 24) | (valid_humidity << 16)
-					| (valid_pressure);
+
+			data_package.humidity = valid_humidity;
+			data_package.pressure = valid_pressure;
+			data_package.temperature = valid_temperature;
+
 			osMessageQueuePut(displayQueueHandle, &data_package, 0, 0);
 		}
 
@@ -121,6 +130,23 @@ void StartDHT11Task(void *argument) {
 			int32_t state = osKernelLock();
 			DHT11_Start_End(&hdht);
 			osKernelRestoreLock(state);
+		}
+	}
+}
+
+void StartLPS25HBTask(void *argument) {
+	uint32_t pressure_buff;
+
+	hlps25hb.addr = LPS25HB_I2C_ADDR;
+	hlps25hb.pressure_buff = &pressure_buff;
+	hlps25hb.hi2c = &hi2c2;
+
+	LPS25HB_Config(&hlps25hb);
+	osDelay(1200);
+
+	for (;;) {
+		if (osSemaphoreAcquire(lps25hbStartSemHandle, osWaitForever) == osOK) {
+			LPS25HB_ReadPressure(&hlps25hb);
 		}
 	}
 }
