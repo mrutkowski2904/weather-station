@@ -34,7 +34,7 @@ UI navigation:<br>
 <br>Start:<br>
 ![start-animation](./img/start.gif)
 
-<br>SD Card info:
+<br>SD Card info:<br>
 ![sdcard-info](./img/sd2.jpg)
 
 Saved data exported to Excel:<br>
